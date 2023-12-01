@@ -1,0 +1,7 @@
+[deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+EntropyMaximisation = "e9d4d5d4-4cae-48c5-8e91-69bea3101049"
+JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
+Mosek = "6405355b-0ac2-5fba-af84-adbd65488c0e"
+MosekTools = "1ec41992-ff65-5c91-ac43-2df89e9693a4"
+Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
