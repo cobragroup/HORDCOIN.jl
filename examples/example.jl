@@ -13,16 +13,9 @@ using EntropyMaximisation
 
 using JuMP.Containers: @container
 
-foo3()
-
-foo2()
-
-
 permutations_of_length(2, 5)
 
 distribution_entropy([0.1, 0.2, 0.3, 0.4])
-
-prepare_data()
 
 ipfn([1, 0, 0, 0], [0, 1])
 
@@ -118,7 +111,6 @@ s = permutations_of_length(2, 3)
 sum(p2.data)
 
 res = descent(p2.data, s; iterations = 1000) # slower than IPFN
-res_zero = descent_v2(p2.data, s; iterations = 1000)
 
 sum(res)
 
