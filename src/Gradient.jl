@@ -8,7 +8,7 @@ function project_to_constraints(data, joined_prob::Array{Float64}, marginals)
 
     n = length(joined_prob)
 
-    model = Model(Mosek.Optimizer)
+    model = Model(SCS.Optimizer)
     # ?
     set_silent(model)
 
@@ -24,13 +24,13 @@ function project_to_constraints(data, joined_prob::Array{Float64}, marginals)
         
     @variable(model, t) # t is min distance
     @constraint(model, [t, (p - data)...] in SecondOrderCone())
-    #@constraint(model, [i=1:n], p[i] >= 0)
     @objective(model, Min, t)
 
     optimize!(model)
 
     # this function uses natural logarithm, so it is need to take it in account
     # p is sometimes negative!!!!!!!!
+    any(x -> x < 0, value.(q)) && throw(DomainError("Solver wasn't able to solve least square distance without negative probability"))
     return objective_value(model), value.(p) #round.(value.(q), digits=5))
 end
 
@@ -51,6 +51,7 @@ function descent(data, marginals; iterations = 1000)
     @showprogress for i in 1:iterations
         prev = flat
         flat += step * partial_der_entropy.(flat; default = def)
+        flat[flat .< 0] .= 0
         #@show flat
         distance, flat = project_to_constraints(flat, data, marginals)
         #step *= 0.95
