@@ -3,22 +3,30 @@ module EntropyMaximisation
 
     using Pkg
     using SCS
+    using MathOptInterface
 
     export Cone
     export Gradient
-    export Ipfn
+    export Ipfp
     export maximize_entropy
     export connected_information
 
+    export SCSOptimizer
+    export MosekOptimizer
+
     include("Utils.jl")
-    include("IPFN.jl")
+    include("IPFP.jl")
     include("Cone.jl")
     include("MatlabParser.jl")
     include("Gradient.jl")
 
     abstract type AbstractMethod end
 
-    struct Cone <: AbstractMethod end
+    struct Cone <: AbstractMethod
+        optimizer::AbstractOptimizer
+    end
+
+    Cone() = Cone(SCSOptimizer())
 
     struct Gradient <: AbstractMethod
         iterations::Int
@@ -26,11 +34,11 @@ module EntropyMaximisation
 
     Gradient() = Gradient(1000)
 
-    struct Ipfn <: AbstractMethod
+    struct Ipfp <: AbstractMethod
         iterations::Int
     end
 
-    Ipfn() = Ipfn(1000)    
+    Ipfp() = Ipfp(1000)    
 
     function maximize_entropy(joined_probability::Array{Float64}, marginal_size; method = Cone())
 
@@ -40,12 +48,12 @@ module EntropyMaximisation
         marginals = permutations_of_length(marginal_size, ndims(joined_probability))
 
         if method isa Cone
-            # TODO: output is not the same as in IPFN or Gradient - list
-            return cone_over_probabilities(joined_probability, marginals)
+            # TODO: output is not the same as in IPFP or Gradient - list
+            return cone_over_probabilities(joined_probability, marginals; solver = method.optimizer)
         elseif method isa Gradient
             return descent(joined_probability, marginals, iterations = method.iterations)
-        elseif method isa Ipfn
-            return ipfn(joined_probability, marginals, iterations = method.iterations)
+        elseif method isa Ipfp
+            return ipfp(joined_probability, marginals, iterations = method.iterations)
         else
             error("Unknown method of type $(typeof(method))")
         end
