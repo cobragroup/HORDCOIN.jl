@@ -1,5 +1,6 @@
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 EntropyMaximisation = "e9d4d5d4-4cae-48c5-8e91-69bea3101049"
 JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
 Mosek = "6405355b-0ac2-5fba-af84-adbd65488c0e"
