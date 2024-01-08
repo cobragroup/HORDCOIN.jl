@@ -1,6 +1,9 @@
 
 module EntropyMaximisation
 
+    # Optimize sampling in examples by creating only parts of the long matrixes
+    # benchmark and compare memory and time @benchmark
+
     using Pkg
     using SCS
     using MathOptInterface
@@ -60,19 +63,14 @@ module EntropyMaximisation
     end
 
 
-    function connected_information(joined_probability::Array{Float64}, marginal_size; method = Cone())
+    function connected_information(joined_probability::Array{Float64}, marginal_size; method = Cone(MosekOptimizer()))
 
         marginal_size > ndims(joined_probability) && throw(DomainError("Marginal size cannot be greater than number of dimensions of joined probability"))
         marginal_size < 2 && throw(DomainError("Marginal size for connected information cannot be less than 2"))
 
-        marginals1 = permutations_of_length(marginal_size - 1, ndims(joined_probability))
-        marginals2 = permutations_of_length(marginal_size, ndims(joined_probability))
-
-        if method isa Cone
-            entropy1 = cone_over_probabilities(joined_probability, marginals1)[1]
-            entropy2 = cone_over_probabilities(joined_probability, marginals2)[1]
-            return entropy1 - entropy2
-        end
+        entropy1 = maximize_entropy(joined_probability, marginal_size - 1; method)[1]
+        entropy2 = maximize_entropy(joined_probability, marginal_size; method)[1]
+        return entropy1 - entropy2
     end
 
 end
