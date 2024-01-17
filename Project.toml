@@ -5,14 +5,12 @@ version = "1.0.0-DEV"
 
 [deps]
 JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
-MAT = "23992714-dd62-5051-b70f-ba57cb901cac"
 MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
 Mosek = "6405355b-0ac2-5fba-af84-adbd65488c0e"
 MosekTools = "1ec41992-ff65-5c91-ac43-2df89e9693a4"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
 SCS = "c946c3f1-0d1f-5ce8-9dea-7daa1f7e2d13"
-Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
 julia = "1.9"
