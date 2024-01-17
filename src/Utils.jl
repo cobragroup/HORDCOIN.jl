@@ -1,7 +1,4 @@
-
-export distribution_entropy
-export permutations_of_length
-
+# Utils.jl:
 
 function entropy(probability::T) where {T <: Real}
     if probability == 0
@@ -11,7 +8,7 @@ function entropy(probability::T) where {T <: Real}
 end
 
 function distribution_entropy(distribution::Array{T}) where {T <: Real}
-    any(x -> x < 0, distribution) && throw(DomainError("Distribution entropy cannot be computed for negative probability"))
+    any(x -> x < 0, distribution) && throw(DomainError("Distribution entropy cannot be computed for negative value"))
     return sum(entropy.(distribution))
 end
 
@@ -34,5 +31,7 @@ function permutations_of_array(arr::Array{Int}, length::Int)::Vector{Vector{Int}
 end
 
 function permutations_of_length(length::Int, dims::Int)::Vector{Tuple}
+    length > dims && throw(DomainError("Length $length cannot be greater than number of dimensions $dims"))
+    length < 1 && throw(DomainError("Length $length has to be possitive"))
     permutations_of_array(collect(1:dims), length) |> vecs2tuples
 end
