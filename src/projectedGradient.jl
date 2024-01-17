@@ -1,5 +1,4 @@
-using JuMP, MosekTools
-using JuMP.Containers: @container
+# projectedGradient.jl
 
 function project_to_constraints(data, joined_prob::Array{Float64}, marginals; solver::AbstractOptimizer)
 

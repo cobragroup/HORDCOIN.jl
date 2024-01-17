@@ -14,12 +14,12 @@ A = [0.0  0.5  1.0  1.5  2.0;
      1.5  0.0 -1.0 -0.5  1.5;
      1.0 -1.0  0.5  3.0 -2.5;
      0.5  1.0  2.0  0.0  1.5;
-     2.5 -2.0 -2.5 -1.5  2.5]
+     2.5 -2.0 -2.5 -1.5  2.5];
 Σ = A * A' 
 d = MvNormal(zeros(5), Σ)
 
 # distribution generation
-Random.seed!(15)
+Random.seed!(15);
 samples = rand(d, 10_000_000);
 
 function discretize(val)
@@ -55,7 +55,5 @@ end
 distribution = distribution ./ sum(distribution);
 
 # calculation of connected information
+connected_information(distribution, [2, 3, 4, 5])
 connected_information(distribution, 2)
-connected_information(distribution, 3)
-connected_information(distribution, 4)
-connected_information(distribution, 5)

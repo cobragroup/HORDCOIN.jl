@@ -1,4 +1,4 @@
-# Utils.jl:
+# utils.jl:
 
 function entropy(probability::T) where {T <: Real}
     if probability == 0

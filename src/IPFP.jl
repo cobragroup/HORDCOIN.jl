@@ -1,4 +1,4 @@
-using ProgressMeter
+# ipfp.jl
 
 function ipfp(joined_prob::Array{Float64}, marginals; iterations = 1)::EMResult
 
