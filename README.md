@@ -15,7 +15,7 @@ Methods used to maximize the entropy:
 ## Installation
 Package is not registered, but can be installed in the following way:
 ```julia
-(@v1.9) pkg> add git@github.com:B0B36JUL-FinalProjects-2023/Projekt_Kislinger.git
+(@v1.9) pkg> add https://gitlab.com/kislijak/entropy-maximisation.git
 ```
 
 ## Usage
