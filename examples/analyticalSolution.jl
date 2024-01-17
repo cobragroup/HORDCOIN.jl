@@ -1,10 +1,9 @@
-using Pkg
+# analyticalSolution.jl: Example for comparing analytical solution and EntropyMaximisation package
 
-Pkg.activate("examples/")
-using Revise
 using EntropyMaximisation
 
 using JuMP.Containers: @container
+
 
 function mutual_information(p::Array{Float64, 2})
     p1 = sum(p, dims = 2)
@@ -16,18 +15,18 @@ function mutual_information(p::Array{Float64, 2})
         end
     end
     return s
-end
+end;
 
 p = @container([x1 = [0, 1], x2 = [0, 1], x3 =[0, 1]], .0)
 
-p[0, 0, 0] = 1 / 16
-p[0, 0, 1] = 3 / 16
-p[0, 1, 0] = 3 / 16
-p[0, 1, 1] = 1 / 16
-p[1, 0, 0] = 1 / 16
-p[1, 0, 1] = 3 / 16
-p[1, 1, 0] = 3 / 16
-p[1, 1, 1] = 1 / 16
+p[0, 0, 0] = 1 / 16;
+p[0, 0, 1] = 3 / 16;
+p[0, 1, 0] = 3 / 16;
+p[0, 1, 1] = 1 / 16;
+p[1, 0, 0] = 1 / 16;
+p[1, 0, 1] = 3 / 16;
+p[1, 1, 0] = 3 / 16;
+p[1, 1, 1] = 1 / 16;
 
 p1 = sum(p.data, dims = (2, 3))
 p2 = sum(p.data, dims = (1, 3))

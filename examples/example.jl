@@ -1,14 +1,5 @@
+# example.jl:
 
-# activate examples
-# dev .
-# and go through the commands below
-
-
-using Pkg
-#Pkg.precompile()
-#Pkg.instantiate()
-#Pkg.resolve()
-using Revise
 using EntropyMaximisation
 
 using JuMP.Containers: @container
@@ -110,22 +101,24 @@ s = permutations_of_length(2, 3)
 
 sum(p2.data)
 
+distribution_entropy(p2.data)
+
 res = descent(p2.data, s; iterations = 1000) # slower than IPFN
-res1 = maximize_entropy(p2.data, 2; method = Gradient(1000))
+res1 = maximize_entropy(p2.data, 2; method = Gradient(10, MosekOptimizer()))
 
 res == res1
 
-sum(res)
+sum(res1)
 
 distribution_entropy(res1)
 
-res2 = maximize_entropy(p2.data, 2; method = Ipfn(10000))
+res2 = maximize_entropy(p2.data, 2; method = Ipfp(10))
 
 distribution_entropy(res2)
 
-res3 = maximize_entropy(p2.data, 2; method = Cone())[2]
-maximize_entropy(p2.data, 2; method = Cone())[1]
-maximize_entropy(p2.data, 1; method = Cone())[1]
+res3 = maximize_entropy(p2.data, 2; method = Cone())
+res = maximize_entropy(p2.data, 2; method = Cone(MosekOptimizer()))
+maximize_entropy(p2.data, 2; method = Cone())
 
 distribution_entropy(res3)
 

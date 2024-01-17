@@ -1,20 +1,19 @@
+# raid.jl: RAID 6 examples
 
-using Pkg
-using Revise
-using EntropyMaximisation
+using EntropyMaximisation   
 
 
 function to_bits(x, n)
     Vector([(x÷(2^y))%2 for y in (n-1):-1:0])
-end
+end;
 
 b = to_bits(13, 5)
 
 function bitarr_to_int(arr)
     return sum(arr .* (2 .^ collect(length(arr)-1:-1:0)))
-end
+end;
 
-xor_vec(x::Vector) = xor.(x...)
+xor_vec(x::Vector) = xor.(x...);
 
 # Computes EVENODD complement and returns it as an integer
 function compute_evenodd(nums::Vector{Int}, n)
@@ -38,17 +37,18 @@ function compute_evenodd(nums::Vector{Int}, n)
     binary = xor_last.(xx[1:n])
     # converting back to integer
     bitarr_to_int(binary)
-end
+end;
+
 
 data = rand(0:7, (1_000_000, 3))
 
 data_xor = xor.(data[:, 1], data[:, 2], data[:, 3])
 
-compute_evenodd_2(x) = compute_evenodd(x, 2)
+compute_evenodd_2(x) = compute_evenodd(x, 2);
 
 data_evenodd = mapslices(compute_evenodd_2, data, dims = 2)
 
-final_data = hcat(data, data_xor, data_evenodd)
+final_data = hcat(data, data_xor, data_evenodd);
 
 final_data = final_data .+ 1
 
@@ -61,40 +61,12 @@ end
 distribution = distribution ./ sum(distribution);
 
 
-maximize_entropy(distribution, 1, method = Cone(MosekOptimizer()))[1]
-maximize_entropy(distribution, 2, method = Cone(MosekOptimizer()))[1]
-maximize_entropy(distribution, 3, method = Cone(MosekOptimizer()))[1]
-maximize_entropy(distribution, 4, method = Cone(MosekOptimizer()))[1]
-maximize_entropy(distribution, 5, method = Cone(MosekOptimizer()))[1]
+maximize_entropy(distribution, 1, method = Cone(MosekOptimizer()))
+maximize_entropy(distribution, 2, method = Cone(MosekOptimizer()))
+maximize_entropy(distribution, 3, method = Cone(MosekOptimizer()))
+maximize_entropy(distribution, 4, method = Cone(MosekOptimizer()))
+maximize_entropy(distribution, 5, method = Cone(MosekOptimizer()))
 
-connected_information(distribution, 2)
-connected_information(distribution, 3)
+connected_information(distribution, [2, 3, 4, 5])
+
 connected_information(distribution, 4)
-connected_information(distribution, 5)
-
-
-
-
-
-xor_data = rand(0:3, (1_000_000, 4))
-
-xor_data[:, 3] = xor.(xor_data[:, 1], xor_data[:, 2])
-
-xor_data[:, 4] = xor.(xor_data[:, 1], xor_data[:, 2], xor_data[:, 3])
-
-xor_data = xor_data .+ 1
-
-xor_dis = zeros(4, 4, 4, 4);
-
-for x in eachrow(xor_data);
-    xor_dis[x...] += 1;
-end
-
-xor_dis = xor_dis ./ sum(xor_dis);
-
-xor_dis
-
-maximize_entropy(xor_dis, 1)
-maximize_entropy(xor_dis, 2)
-maximize_entropy(xor_dis, 3)
-maximize_entropy(xor_dis, 4)

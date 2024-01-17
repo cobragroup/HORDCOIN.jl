@@ -1,12 +1,9 @@
+# comparison.jl:
 
-Pkg.activate("examples/")
-Pkg.dev(".")
-using Pkg
-using Revise
 using EntropyMaximisation
-using Random
 
-using BenchmarkTools
+using Random, BenchmarkTools
+
 
 function create_distribution(dims::Int, size::Int; examples::Int = 10_000_000)
     Random.seed!(15);
@@ -46,7 +43,7 @@ for i in 2:4
     end
 end
 
-i = 5
+i = 5;
 distribution = create_distribution(i, 10);
 for j in 1:i-1
     println("marginal size ", j)

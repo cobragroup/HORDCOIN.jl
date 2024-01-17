@@ -1,13 +1,9 @@
+# normalDistribution.jl: Multivariate normal distribution example 
 
-using Pkg
-using Revise
 using EntropyMaximisation
 
-# Multivariate normal distribution example
+using Distributions, LinearAlgebra, Random
 
-using Distributions
-using LinearAlgebra
-using Random
 
 # distribtution setup
 A = [0.0  0.5  1.0  1.5  2.0;
