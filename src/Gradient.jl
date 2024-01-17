@@ -15,7 +15,7 @@ function project_to_constraints(data, joined_prob::Array{Float64}, marginals; so
     else
         error("Unknown solver of type $(typeof(solver))")
     end
-    # ?
+    
     set_silent(model)
 
     # define the result probabilities
@@ -34,14 +34,11 @@ function project_to_constraints(data, joined_prob::Array{Float64}, marginals; so
 
     optimize!(model)
 
-    # this function uses natural logarithm, so it is need to take it in account
-    # p is sometimes negative!!!!!!!!
     any(x -> x < 0, value.(q)) && throw(DomainError("Solver wasn't able to solve least square distance without negative probability"))
-    return objective_value(model), value.(p) #round.(value.(q), digits=5))
+    return value.(p)
 end
 
 function partial_der_entropy(x; default = 10)
-    # ignoring division by log(2)
     if x <= 0
         # default value is important due to the derivative of entropy not being defined at 0
         return default
@@ -57,8 +54,7 @@ function descent(data, marginals; iterations = 1000, solver::AbstractOptimizer =
     @showprogress for i in 1:iterations
         flat += step * partial_der_entropy.(flat; default = def)
         flat[flat .< 0] .= 0
-        distance, flat = project_to_constraints(flat, data, marginals; solver = solver)
-        #step *= 0.95
+        flat = project_to_constraints(flat, data, marginals; solver = solver)
     end
-    return reshape(flat, size(data)) 
+    return EMResult(reshape(flat, size(data)))
 end

@@ -23,6 +23,16 @@ module EntropyMaximisation
     struct MosekOptimizer <: AbstractOptimizer end
 
     include("Utils.jl")
+
+    struct EMResult
+        entropy::Float64
+        joined_probability::Array{T} where T <: Real
+    end
+
+    EMResult(joined_probability::Array{T}) where T <: Real = EMResult(distribution_entropy(joined_probability), joined_probability)
+
+    Base.show(io::IO, result::EMResult) = print(io, "Entropy: ", result.entropy, "\nDistribution:\n", result.joined_probability)
+
     include("IPFP.jl")
     include("Cone.jl")
     include("MatlabParser.jl")
@@ -51,7 +61,7 @@ module EntropyMaximisation
     Ipfp() = Ipfp(10)    
 
 
-    function maximize_entropy(joined_probability::Array{T}, marginal_size; method = Cone()) where T <: Real
+    function maximize_entropy(joined_probability::Array{T}, marginal_size; method = Cone())::EMResult where T <: Real 
 
         marginal_size > ndims(joined_probability) && throw(DomainError("Marginal size cannot be greater than number of dimensions of joined probability"))
         marginal_size < 1 && throw(DomainError("Marginal size has to be possitive"))
@@ -60,7 +70,6 @@ module EntropyMaximisation
         marginals = permutations_of_length(marginal_size, ndims(joined_probability))
 
         if method isa Cone
-            # TODO: output is not the same as in IPFP or Gradient - list
             return cone_over_probabilities(joined_probability, marginals; solver = method.optimizer)
         elseif method isa Gradient
             return descent(joined_probability, marginals, iterations = method.iterations; solver = method.optimizer)

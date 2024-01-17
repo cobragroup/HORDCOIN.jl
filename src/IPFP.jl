@@ -1,6 +1,6 @@
 using ProgressMeter
 
-function ipfp(joined_prob::Array{Float64}, marginals; iterations = 1)
+function ipfp(joined_prob::Array{Float64}, marginals; iterations = 1)::EMResult
 
     ~(s::Tuple) = (i for i = 1:ndims(joined_prob) if i ∉ s)
 
@@ -28,5 +28,5 @@ function ipfp(joined_prob::Array{Float64}, marginals; iterations = 1)
         end
     end
 
-    return order ? base1 : base2
+    return EMResult(order ? base1 : base2)
 end

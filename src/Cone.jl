@@ -2,7 +2,7 @@
 using JuMP, MosekTools
 using JuMP.Containers: @container
 
-function cone_over_probabilities(joined_prob::Array{Float64}, marginals; solver::AbstractOptimizer = SCSOptimizer())
+function cone_over_probabilities(joined_prob::Array{Float64}, marginals; solver::AbstractOptimizer = SCSOptimizer())::EMResult
 
     # defines the complement of a set of dimension
     ~(s::Tuple) = (i for i = 1:ndims(joined_prob) if i ∉ s)
@@ -38,5 +38,5 @@ function cone_over_probabilities(joined_prob::Array{Float64}, marginals; solver:
     optimize!(model)
 
     # this function uses natural logarithm, so it is need to take it in account
-    (objective_value(model) / log(2), value.(q)) #round.(value.(q), digits=5))
+    return EMResult(objective_value(model) / log(2), value.(q))
 end
