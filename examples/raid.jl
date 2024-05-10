@@ -4,7 +4,6 @@ using EntropyMaximisation
 
 using MosekTools
 
-
 function to_bits(x, n)
     Vector([(x÷(2^y))%2 for y in (n-1):-1:0])
 end;
@@ -42,33 +41,66 @@ function compute_evenodd(nums::Vector{Int}, n)
 end;
 
 
-data = rand(0:7, (1_000_000, 3))
+data_1m = rand(0:7, (1_000_000, 3))
+data_1k = rand(0:7, (1_000, 3))
 
-data_xor = xor.(data[:, 1], data[:, 2], data[:, 3])
+data_1m_xor = xor.(data_1m[:, 1], data_1m[:, 2], data_1m[:, 3])
+data_1k_xor = xor.(data_1k[:, 1], data_1k[:, 2], data_1k[:, 3])
 
 compute_evenodd_2(x) = compute_evenodd(x, 2);
 
-data_evenodd = mapslices(compute_evenodd_2, data, dims = 2)
+data_1m_evenodd = mapslices(compute_evenodd_2, data_1m, dims = 2)
+data_1k_evenodd = mapslices(compute_evenodd_2, data_1k, dims = 2)
 
-final_data = hcat(data, data_xor, data_evenodd);
+final_data_1m = hcat(data_1m, data_1m_xor, data_1m_evenodd);
+final_data_1k = hcat(data_1k, data_1k_xor, data_1k_evenodd);
 
-final_data = final_data .+ 1
+final_data_1m = final_data_1m .+ 1
+final_data_1k = final_data_1k .+ 1
 
-distribution = zeros(8, 8, 8, 8, 8);
+distribution_1m = zeros(Int, 8, 8, 8, 8, 8);
+distribution_1k = zeros(Int, 8, 8, 8, 8, 8);
 
-for x in eachrow(final_data);
-    distribution[x...] += 1;
+for x in eachrow(final_data_1m);
+    distribution_1m[x...] += 1;
 end
 
-distribution = distribution ./ sum(distribution);
+for x in eachrow(final_data_1k);
+    distribution_1k[x...] += 1;
+end
+
+normalised_1m = distribution_1m ./ sum(distribution_1m);
+normalised_1k = distribution_1k ./ sum(distribution_1k);
 
 
-maximize_entropy(distribution, 1, method = Cone(MosekTools.Optimizer()))
-maximize_entropy(distribution, 2, method = Cone(MosekTools.Optimizer()))
-maximize_entropy(distribution, 3, method = Cone(MosekTools.Optimizer()))
-maximize_entropy(distribution, 4, method = Cone(MosekTools.Optimizer()))
-maximize_entropy(distribution, 5, method = Cone(MosekTools.Optimizer()))
 
-connected_information(distribution, [2, 3, 4, 5])
+# Calculation of connected information:
+# 1. fixing the marginal distribtutions
+connected_information(normalised_1m, [2, 3, 4, 5], method = Cone(MosekTools.Optimizer()))
 
-connected_information(distribution, 4)
+# 2. fixing the marginal entropies using polymatroid method
+# a) using entropy estimate from empirical distribution
+method = RawPolymatroid(0.0, false, Mosek.Optimizer())
+
+ci_raw_1m, ent_raw_1m = connected_information(distribution_1m, collect(2:5); method)
+ci_raw_1k, ent_raw_1k = connected_information(distribution_1k, collect(2:5); method)
+
+# b) using NSB estimator (takes approx 4 minutes)
+method = NsbPolymatroid(false, Mosek.Optimizer(), 0.01)
+
+ci_nsb_1m, ent_nsb_1m = connected_information(distribution_1m, collect(2:5); method)
+ci_nsb_1k, ent_nsb_1k = connected_information(distribution_1k, collect(2:5); method)
+
+function normalise_and_sort_dict(dictionary)
+    return sort(collect(map(x -> (x[1] => round(x[2]./sum(values(dictionary)), digits = 3)), collect(dictionary))), by = x -> x[1])
+end
+
+ci_nsb_1m
+ci_raw_1m
+ci_nsb_1k
+ci_raw_1k
+
+normalise_and_sort_dict(ci_nsb_1m)
+normalise_and_sort_dict(ci_raw_1m)
+normalise_and_sort_dict(ci_nsb_1k)
+normalise_and_sort_dict(ci_raw_1k)
