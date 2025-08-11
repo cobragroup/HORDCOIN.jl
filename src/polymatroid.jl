@@ -1,5 +1,40 @@
 # polymatroid.jl
 
+"""
+    polymatroid_optim(
+        joined_prob::Array{Float64},
+        marginal_size;
+        model::Model = Model(Mosek.Optimizer),
+        zhang_yeung::Bool = false,
+        mle_correction::Real = 0,
+    ) -> Tuple{Real, Vector{Float64}, Dict}
+
+Solve a **polymatroid-based** upper bound on maximum entropy subject to fixed marginal entropies up to order `marginal_size`.
+
+This builds a JuMP model with the polymatroid (Shannon-type) constraints on the set function `h(·)`:
+- Nonnegativity: `h(A) ≥ 0` for all subsets `A`.
+- Submodularity: `h(A∪i) + h(A∪j) ≥ h(A∪{i,j}) + h(A)`.
+- Monotonicity: `h(N) ≥ h(N \\ i)` for all variables `i`.
+It then **matches** `h(S)` to the empirical/true marginal entropies of `joined_prob` for all `|S| ≤ marginal_size` and maximizes `h(N)`.
+
+# Arguments
+- `joined_prob::Array{Float64}`: N-dimensional **probability table** (nonnegative, sum ≈ 1).
+- `marginal_size::Int`: Largest subset size whose entropy is constrained to equal the entropy of the corresponding marginal of `joined_prob`.
+
+# Keywords
+- `model::Model = Model(Mosek.Optimizer)`: JuMP model/optimizer to use.
+- `zhang_yeung::Bool = false`: If `true`, add a family of **Zhang–Yeung** non-Shannon inequalities (requires `ndims(joined_prob) ≥ 4`).
+- `mle_correction::Real = 0`: Additive bias correction applied to each marginal entropy constraint (e.g., Miller–Madow).
+
+# Returns
+- `(Hmax, h_vals, set_to_index)` where:
+  - `Hmax::Real` is the optimal value of `h(N)`.
+  - `h_vals::Vector{Float64}` are the optimized values of `h(·)` indexed by `set_to_index`.
+  - `set_to_index::Dict{Vector{Int},Int}` maps each subset `A ⊆ N` (stored as a sorted `Vector{Int}`) to its index in `h_vals`.
+
+# Throws
+- May throw if the optimization model is infeasible for the supplied constraints/optimizer.
+"""
 function polymatroid_optim(joined_prob::Array{Float64}, marginal_size; model::Model = Model(Mosek.Optimizer), zhang_yeung = false, mle_correction = 0)
 
     set_silent(model)
@@ -97,10 +132,48 @@ function polymatroid_optim(joined_prob::Array{Float64}, marginal_size; model::Mo
 
 end
 
+"""
+    polymatroid_most_gen(
+        method::PolymatroidEntropyMethod,
+        data::Array{Int},
+        marginal_size::Int;
+        precalculated_entropies::Dict{Vector{Int},<:Real} = Dict(),
+        set_to_index::Dict{Vector{Int},Int}} = Dict(),
+    ) -> Tuple{Real, Vector{Float64}, Dict{Vector{Int},Real}, Dict{Vector{Int},Int}}
+
+General polymatroid optimizer that works directly with **count data** and supports caching.
+
+Builds a JuMP model with polymatroid constraints and sets `h(S)` equal to **entropy estimates** of the corresponding marginals for all `|S| ≤ marginal_size`. The entropy estimator depends on `method`:
+- `RawPolymatroid(joined_probability, mle_correction, ...)`: uses `distribution_entropy` on **normalized** `joined_probability` supplied in the method, plus optional `mle_correction`.
+- `NsbPolymatroid(...)`: uses the **NSB** estimator `nsb(·)` on the count marginals from `data`.
+
+# Arguments
+- `method::PolymatroidEntropyMethod`: Estimation strategy and optimizer wrapper (e.g., `RawPolymatroid`, `NsbPolymatroid`).
+- `data::Array{Int}`: N-dimensional **counts** tensor (nonnegative integers).
+- `marginal_size::Int`: Largest subset size whose entropy is constrained.
+
+# Keywords
+- `precalculated_entropies`: Optional cache mapping subset `Vector{Int}` → entropy value; will be **read and updated**.
+- `set_to_index`: Optional mapping from subset to index in `h`; allows reusing the same indexing across calls.
+
+# Returns
+- `(Hmax, h_vals, entropies, set_index)` where:
+  - `Hmax::Real` is the optimal value of `h(N)`.
+  - `h_vals::Vector{Float64}` are optimized values of `h(·)`.
+  - `entropies::Dict{Vector{Int},Real}` contains the (possibly cached) entropy values used for each constrained subset.
+  - `set_index::Dict{Vector{Int},Int}` is the subset-to-index map used for `h_vals`.
+
+# Throws
+- May throw if the optimization model is infeasible or the estimator fails for the provided data.
+
+# Notes
+- When `method isa NsbPolymatroid` and `method.tolerance > 0`, constraints are relaxed to an interval `(1±tolerance)·entropy(S)` instead of equality.
+- If `method.zhang_yeung` is `true` and `ndims(data) ≥ 4`, Zhang–Yeung inequalities are added.
+"""
 function polymatroid_most_gen(method::PolymatroidEntropyMethod,
                               data::Array{Int}, 
                               marginal_size::Int;
-                              precalculated_entropies = Dict(),
+                              precalculated_entropies = Dict{Vector{Int}, Real}(),
                               set_to_index = Dict())
 
     model = Model(typeof(method.optimiser))
@@ -110,7 +183,7 @@ function polymatroid_most_gen(method::PolymatroidEntropyMethod,
 
     N = 1:num_dimensions
 
-    # doctionary set to index
+    # dictionary set to index
     s_i = set_to_index
     ent = precalculated_entropies
 
@@ -222,16 +295,57 @@ function polymatroid_most_gen(method::PolymatroidEntropyMethod,
 
 end
 
-function entropy(data::Array{Int}, method::RawPolymatroid, inverse_marginals)
+"""
+    entropy(data::Array{Int}, method::RawPolymatroid, inverse_marginals) -> Real
+
+Entropy helper for `RawPolymatroid`.
+
+Computes `distribution_entropy(sum(method.joined_probability, dims = inverse_marginals)) + method.mle_correction` where `inverse_marginals` selects the axes **to sum out**.
+
+# Arguments
+- `data::Array{Int}`: Ignored by this estimator; present for a uniform signature.
+- `method::RawPolymatroid`: Contains `joined_probability` and `mle_correction` fields.
+- `inverse_marginals`: Iterable of axes to marginalize out.
+
+# Returns
+- `Real`: Estimated entropy of the marginal defined by `inverse_marginals`.
+"""
+function entropy(data::Array{Int}, method::RawPolymatroid, inverse_marginals)::Real
     return distribution_entropy(sum(method.joined_probability, dims = inverse_marginals)) + method.mle_correction
 end
 
-function entropy(data::Array{Int}, method::NsbPolymatroid, inverse_marginals)
-    return call_nsb_octave(sum(data, dims = inverse_marginals))
+"""
+    entropy(data::Array{Int}, method::NsbPolymatroid, inverse_marginals) -> Real
+
+Entropy helper for `NsbPolymatroid` using the **NSB estimator** on counts.
+
+# Arguments
+- `data::Array{Int}`: Counts tensor.
+- `method::NsbPolymatroid`: NSB-based estimator configuration.
+- `inverse_marginals`: Iterable of axes to marginalize out.
+
+# Returns
+- `Real`: NSB estimate `nsb(sum(data, dims = inverse_marginals))`.
+"""
+function entropy(data::Array{Int}, method::NsbPolymatroid, inverse_marginals)::Real
+    return nsb(sum(data, dims = inverse_marginals))
 end
 
 export precompute_entropies
 
+"""
+    precompute_entropies(data::Array{Int}) -> Dict{Vector{Int},Real}
+
+Pre-compute NSB **marginal entropies** for all non-empty subsets of variables in `data`.
+
+Useful when repeatedly solving polymatroid programs with the same dataset: pass the returned dictionary to `precalculated_entropies` in `polymatroid_most_gen`.
+
+# Arguments
+- `data::Array{Int}`: N-dimensional counts tensor.
+
+# Returns
+- `Dict{Vector{Int},Real}` mapping each subset `S` (stored as a sorted `Vector{Int}`) to `nsb` entropy of the marginal over `S`.
+"""
 function precompute_entropies(data::Array{Int})
 
     entropies = Dict()
