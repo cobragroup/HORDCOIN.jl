@@ -1,4 +1,5 @@
-# nsb.jl — NSB entropy estimator on sparse count data
+# Gcorr.jl — G entropy estimator on sparse count data
+# Implements the correction from: Grassberger, Peter. "Entropy estimates from insufficient samplings." arXiv preprint physics/0307138 (2003).
 
 # Notes
 # - Avoids global mutable state; uses a small cache object for the G-sequence.

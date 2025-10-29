@@ -1,5 +1,6 @@
-# totalCorrelation.jl: Total correlation of data from paper "Network Inference and Maximum 
-# Entropy Estimation on Information Diagrams" - data can be obtained on request
+# totalCorrelation.jl: Total correlation of data from
+# Martin, E. A., Hlinka, J., Meinke, A., Děchtěrenko, F., Tintěra, J., Oliver, I., & Davidsen, J. (2017). Network Inference and Maximum Entropy Estimation on Information Diagrams. Scientific Reports, 7(1), 7062. https://doi.org/10.1038/s41598-017-06208-w
+# data can available on request
 
 using EntropyMaximisation
 
@@ -21,13 +22,13 @@ dmn_orig_5 = load_data("dmn_results", 5)
 
 function create_unnormalised_distribution(data, dims)
 
-    distribution = zeros(Int, [dims for i in 1:size(data, 2)]...);
+	distribution = zeros(Int, [dims for i in 1:size(data, 2)]...)
 
-    for x in eachrow(data);
-        distribution[x...] += 1;
-    end
+	for x in eachrow(data)
+		distribution[x...] += 1
+	end
 
-    return distribution
+	return distribution
 end;
 
 # Creating unnormalised distributions
@@ -119,7 +120,7 @@ ci_nsb_dmn_5, max_nsb_dmn_5 = connected_information(un_dmn_5, collect(2:10); met
 # Total correlation
 
 function normalise_and_sort_dict(dictionary)
-    return sort(collect(map(x -> (x[1] => round(x[2]./sum(values(dictionary)), digits = 3)), collect(dictionary))), by = x -> x[1])
+	return sort(collect(map(x -> (x[1] => round(x[2] ./ sum(values(dictionary)), digits = 3)), collect(dictionary))), by = x -> x[1])
 end
 
 tc_nsb_fpn_2 = normalise_and_sort_dict(ci_nsb_fpn_2)
@@ -146,7 +147,7 @@ tc_raw_dmn_5 = normalise_and_sort_dict(ci_raw_dmn_5)
 # Printing results
 
 function join_dicts(dicts...)
-    return transpose(hcat(collect.(sort([(k, [d[k] for d in dicts]...) for k in keys(dicts[1])], by = x -> x[1]))...))
+	return transpose(hcat(collect.(sort([(k, [d[k] for d in dicts]...) for k in keys(dicts[1])], by = x -> x[1]))...))
 end
 
 tc_nsb_fpn = join_dicts(Dict(tc_nsb_fpn_2), Dict(tc_nsb_fpn_3), Dict(tc_nsb_fpn_4), Dict(tc_nsb_fpn_5))
