@@ -122,7 +122,7 @@ end
 
 
 """
-	connected_information(joined_probability::Array{<:Real}, order::Int; method::AbstractMarginalMethod = Cone(Ipfp.Optimizer())) -> Float64
+	connected_information(joined_probability::Array{<:Real}, order::Int, method::AbstractMarginalMethod = Cone(Ipfp.Optimizer())) -> Float64
 
 Compute **connected information** (a.k.a. multi-information of order `order`) for the given joint distribution.
 
@@ -157,20 +157,23 @@ Progress: 100%|█████████████████████�
 0.2780719051126377
 ```
 """
-function connected_information(joined_probability::Array{T}, order::Int; method::AbstractMarginalMethod = Cone(Ipfp.Optimizer()))::Float64 where T <: Real
+function connected_information(joined_probability::Array{T}, order::Int, method::AbstractMarginalMethod = Cone(Ipfp.Optimizer()))::Float64 where T <: Real
 
 	order > ndims(joined_probability) &&
 		throw(DomainError("Marginal size cannot be greater than number of dimensions of joined probability"))
 	order < 2 &&
 		throw(DomainError("Marginal size for connected information cannot be less than 2"))
 
-	entropy1 = maximise_entropy(joined_probability, order - 1; method).entropy
-	entropy2 = maximise_entropy(joined_probability, order; method).entropy
+	entropy1 = maximise_entropy(joined_probability, order - 1, method).entropy
+	entropy2 = maximise_entropy(joined_probability, order, method).entropy
 	return entropy1 - entropy2
 end
 
+function connected_information(joined_probability::Array{Int}, order::Int, method::AbstractMarginalMethod)::Float64
+	connected_information(joined_probability ./ sum(joined_probability), order, method)
+end
 """
-	connected_information(joined_probability::Array{<:Real}, orders::Vector{Int}; method = Cone(Ipfp.Optimizer())) -> Dict{Int,Float64}
+	connected_information(joined_probability::Array{<:Real}, orders::Vector{Int}, method = Cone(Ipfp.Optimizer())) -> Dict{Int,Float64}
 
 Compute connected information for **multiple orders** efficiently.
 
@@ -207,7 +210,7 @@ Dict{Int64, Float64} with 2 entries:
   3 => 1.0
 ```
 """
-function connected_information(joined_probability::Array{T}, orders::Vector{Int}; method = Cone(Ipfp.Optimizer())) where T <: Real
+function connected_information(joined_probability::Array{T}, orders::Vector{Int}, method::AbstractMarginalMethod = Cone(Ipfp.Optimizer())) where T <: Real
 
 	sort!(orders)
 
@@ -236,6 +239,10 @@ function connected_information(joined_probability::Array{T}, orders::Vector{Int}
 	end
 
 	return ret_dict
+end
+
+function connected_information(joined_probability::Array{Int}, orders::Vector{Int}, method::AbstractMarginalMethod)
+	connected_information(joined_probability ./ sum(joined_probability), orders, method)
 end
 
 export max_ent_fixed_ent_unnormalized
@@ -354,8 +361,8 @@ export connected_information
 """
 	connected_information(
 		unnormalized::Array{Int},
-		orders::Vector{Int};
-		method::PolymatroidEntropyMethod,
+		orders::Vector{Int},
+		method::PolymatroidEntropyMethod;
 		precalculated_entropies = Dict{Vector{Int}, Real}(),
 	) -> Tuple{Dict{Int,Float64}, Dict{Int,Float64}}
 
@@ -379,7 +386,7 @@ Compute connected information for multiple orders using **count data** (unnormal
 
 If a required entropy is `NaN` for some order, a warning is printed and that order is skipped in the result.
 """
-function connected_information(unnormalized::Array{Int}, orders::Vector{Int}; method::PolymatroidEntropyMethod, precalculated_entropies = Dict{Vector{Int}, Real}())::Tuple{Dict{Int, Float64}, Dict{Int, Float64}}
+function connected_information(unnormalized::Array{Int}, orders::Vector{Int}, method::PolymatroidEntropyMethod = RawPolymatroid(); precalculated_entropies = Dict{Vector{Int}, Real}())::Tuple{Dict{Int, Float64}, Dict{Int, Float64}}
 
 	sort!(orders)
 
@@ -411,6 +418,10 @@ function connected_information(unnormalized::Array{Int}, orders::Vector{Int}; me
 	return ret_dict, dict_entropies
 end
 
+function connected_information(unnormalized::Array{Int}, orders::Int, method::PolymatroidEntropyMethod = RawPolymatroid(); precalculated_entropies = Dict{Vector{Int}, Real}())::Tuple{Dict{Int, Float64}, Dict{Int, Float64}}
+	return connected_information(unnormalized, [orders], method; precalculated_entropies = precalculated_entropies)
+end
+
 function _max_entropy_unnormalized_for_set(unnormalized_distribution::Array{<:Int}, marginal_size::Set{<:Int}, method::PolymatroidEntropyMethod; precalculated_entropies = Dict{Vector{Int}, Real}())
 	if (method isa RawPolymatroid)
 		method.joined_probability = unnormalized_distribution ./ sum(unnormalized_distribution)
@@ -434,3 +445,90 @@ function _max_entropy_unnormalized_for_set(unnormalized_distribution::Array{<:In
 	return result
 end
 end
+
+
+
+"""
+	connected_information(
+		normalized::Array{Int},
+		orders::Vector{Int},
+		method::PolymatroidEntropyMethod;
+		precalculated_entropies = Dict{Vector{Int}, Real}(),
+	) -> Tuple{Dict{Int,Float64}, Dict{Int,Float64}}
+
+Compute connected information for multiple orders using **count data** (normalized). This variant is tailored for polymatroid-based methods and can reuse cached entropies across orders.
+
+# Arguments
+- `normalized::Array{Int}`: N-dimensional array of counts.
+- `orders::Vector{Int}`: Interaction orders to evaluate. Values must satisfy `2 ≤ orders[i] ≤ ndims(normalized)`.
+- `method::PolymatroidEntropyMethod`: A polymatroid-based optimisation method (`RawPolymatroid` or `GPolymatroid`).
+
+# Keywords
+- `precalculated_entropies::Dict = Dict{Vector{Int}, Real}()`: Optional cache to speed up repeated entropy evaluations. Entropies should be computed using log2.
+
+# Returns
+- `(I, H)::Tuple{Dict{Int,Float64}, Dict{Int,Float64}}` where
+- `I[m] = H^*(m-1) - H^*(m)` is the connected information of order `m`.
+- `H[m]` stores the maximum entropy value `H^*(m)` used to compute `I[m]`.
+
+# Throws
+- `DomainError` if any `orders[i] > ndims(normalized)` or if any `orders[i] < 2`.
+
+If a required entropy is `NaN` for some order, a warning is printed and that order is skipped in the result.
+"""
+function connected_information(normalized::Array{T}, orders::Vector{Int}, method::RawPolymatroid; precalculated_entropies = Dict{Vector{Int}, Real}())::Tuple{Dict{Int, Float64}, Dict{Int, Float64}} where T <: Real
+
+	sort!(orders)
+
+	max_size = orders[end]
+	min_size = orders[1]
+
+	max_size > ndims(normalized) &&
+		throw(DomainError("Marginal size cannot be greater than number of dimensions of joined probability"))
+	min_size < 2 &&
+		throw(DomainError("Marginal size for connected information cannot be less than 2"))
+
+	set_marginals = Set([orders..., (orders .- 1)...])
+
+	dict_entropies = _max_entropy_normalized_for_set(normalized, set_marginals, method; precalculated_entropies)
+
+
+	ret_dict = Dict{Int, Float64}()
+
+	for m in orders
+		if (isnan(dict_entropies[m]) || isnan(dict_entropies[m-1]))
+			println("WARNING, order $m or $m-1 has NaN entropy, skipping...")
+			continue
+		end
+		entropy1 = dict_entropies[m-1]
+		entropy2 = dict_entropies[m]
+		ret_dict[m] = entropy1 - entropy2
+	end
+
+	return ret_dict, dict_entropies
+end
+
+function connected_information(normalized::Array{T}, orders::Int, method::RawPolymatroid; precalculated_entropies = Dict{Vector{Int}, Real}())::Tuple{Dict{Int, Float64}, Dict{Int, Float64}} where T <: Real
+	return connected_information(normalized, [orders], method; precalculated_entropies = precalculated_entropies)
+end
+
+function _max_entropy_normalized_for_set(normalized_distribution::Array{<:Int}, marginal_size::Set{<:Int}, method::PolymatroidEntropyMethod; precalculated_entropies = Dict{Vector{Int}, Real}())
+	method.joined_probability = normalized_distribution
+	method.mle_correction = 0
+
+	ent = precalculated_entropies
+	si = Dict()
+	result = Dict{Int, Float64}()
+	for m in marginal_size
+		val, h, ent, si = polymatroid_most_gen(
+			method,
+			normalized_distribution,
+			m;
+			precalculated_entropies = ent,
+			set_to_index = si,
+		)
+		result[m] = val
+	end
+	return result
+end
+
