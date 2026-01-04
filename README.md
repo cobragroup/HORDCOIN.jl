@@ -6,13 +6,13 @@ EntropyMaximisation provides methods for finding probability distributions with 
 
 This project was created as a part of the bachelor's thesis "Connected Information from Given Entropies" at the Faculty of Electrical Engineering, Czech Technical University in Prague, and of the paper "COIN: Connected Information Approximation Using Entropic Constraints". See the section [How to cite](#how-to-cite) to cite it appropriately.
 
-The package implements the following methods to maximise the entropy with marginal constraints:
+To maximise the entropy with marginal constraints, the package implements the following methods:
 - Exponential Cone Programming (with different solvers)
 - Iterative Proportional Fitting Procedure
 - Projected Gradient Descent
 
 To maximize entropy while satisfying entropic constraints, the package employs a polymatroid approximation; refer to the paper for details.
-In case of undersampled distributions, it is possible to use a built-in small sample correction for the values of entropy instead of the plug-in estimator.
+Moreover, in case of undersampled distributions, it is possible to use a built-in small sample correction for the values of entropy instead of the plug-in estimator.
 
 
 ## Installation
@@ -27,14 +27,14 @@ The primary functionality of this package is to implement methods that maximize 
 The input data must satisfy the following requirements:
 - The probability distributions are stored as multidimensional arrays;
 - Probabilities are non-negative and sum up to 1;
-- OR are provided as non-normalised counts;
-- The order of the fixed marginal distributions has to be in [2, n-1], where n is the number of dimensions of the probability distribution.
+- OR are provided as (non-normalised) counts;
+- The maximal order of the fixed marginal distributions has to be in [2, n-1], where n is the number of dimensions of the probability distribution.
 
 ### Connected Information
 
-The main function of the package is `connected_information` that uses the the maximum entropy with constraints at different orders to compute the Connected Information. It takes as input the probability distribution or the counts, along with the desired orders of Connected Information and the optimisation method.
+The main function of the package is `connected_information` that uses the the maximum entropy with constraints at different orders to compute the Connected Information. It takes as input the probability distribution or the (non-normalised) counts, along with the desired orders of Connected Information and the optimisation method.
 
-When computing multiple Connected Information values for the same probability distribution, it is possible to pass the sizes as an array. This will speed up the process by chaining the computations, thereby reducing the number of maximizations.
+When computing multiple Connected Information values for the same probability distribution, it is possible to pass the sizes (desired orders) as an array. This will speed up the process by chaining the computations, thereby reducing the number of maximizations.
 
 If no method is passed, the kind of optimisation is decided by the data type of the input:
 - Int input triggers constraints on the marginal entropy and the RawPolymatroid method;
@@ -52,7 +52,7 @@ using EntropyMaximisation
 counts=cat([1 2; 3 4], [4 2; 1 3], dims=3);
 connected_information(counts, 2)
 ```
-Which will optimise constraining the marginal entropy and will give a result similar to `(Dict(2 => 0.09310598013744764), Dict(2 => 2.892218158842619, 1 => 2.9853241389800664))`
+Which will optimise (maximize entropy) constraining the marginal entropies (up to order 2) and should give a result similar to `(Dict(2 => 0.09310598013744764), Dict(2 => 2.892218158842619, 1 => 2.9853241389800664))`
 
 Notably, the following operations all give the same results:
 ```julia
@@ -82,11 +82,11 @@ Other useful parameters for the Polymatroid methods are:
 - zhang_yeung: to enable the Zhang-Yeung inequalities complementing the Shannon inequalities and improving the approximation at higher orders (see paper),
 - optimizer: to chose between the SCS and the Mosek optimiser
 - mle_correction: (only RawPolymatroid) enables a rough correction for the finite sample
-- tolerance: (only GPolymatroid) enables a relaxation of the constraints to help convergence (sometimes if fails with the corrected entropies). Note: CI can become negative due to the relaxed constraints.
+- tolerance: (only GPolymatroid) enables a relaxation of the constraints to help convergence (sometimes if fails with the corrected entropies). Note: CI estimate can become negative due to the relaxed constraints.
 
 ### Other functions
 
-It is possible to access directly the EntropyMaximisation through the functions `maximise_entropy` for marginal constraints and its sibling `max_ent_fixed_ent_unnormalized` for the entropic constraints. `maximise_entropy` takes as an input a probability distribution and the order of marginal distributions to constrain. The optimiser is an optional parameter that can have further specified parameters (such as the number of iterations, etc.). The function returns the probability distribution with maximal entropy in the form of `EMResult`.
+It is possible to access directly the EntropyMaximisation through the functions `maximise_entropy` for marginal constraints and its sibling function `max_ent_fixed_ent_unnormalized` for the entropic constraints. `maximise_entropy` takes as an input a probability distribution and the order of marginal distributions to constrain. The optimiser is an optional parameter that can have further specified parameters (such as the number of iterations, etc.). The function returns the probability distribution with maximal entropy in the form of `EMResult`.
 `max_ent_fixed_ent_unnormalized` takes a multidimensional array of counts and the order up to which the marginal entropies must be fixed. It allows the selection of the plug-in estimator for the entropies or the corrected one. It's possible to pass a precomputed dictionary of entropies to speed up the computation.
 
 The basic usage is the following:
