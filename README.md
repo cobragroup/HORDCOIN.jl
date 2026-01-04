@@ -76,7 +76,7 @@ connected_information(frequencies, 2, Cone())
 connected_information(frequencies, 2, Cone(SCS.Optimizer()))
 connected_information(frequencies, 2, Cone(MosekTools.Optimizer()))
 ```
-Where the last one requires a Mosek license.
+Where the last one requires a Mosek license. (Academic licence easy to obtain at https://www.mosek.com/products/academic-licenses/).
 
 Other useful parameters for the Polymatroid methods are:
 - zhang_yeung: to enable the Zhang-Yeung inequalities complementing the Shannon inequalities and improving the approximation at higher orders (see paper),
