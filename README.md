@@ -71,10 +71,10 @@ connected_information(frequencies, [2], Ipfp())
 
 Or similar results with:
 ```julia
-connected_information(frequency, 2, Gradient())
-connected_information(frequency, 2, Cone())
-connected_information(frequency, 2, Cone(SCS.Optimizer()))
-connected_information(frequency, 2, Cone(MosekTools.Optimizer()))
+connected_information(frequencies, 2, Gradient())
+connected_information(frequencies, 2, Cone())
+connected_information(frequencies, 2, Cone(SCS.Optimizer()))
+connected_information(frequencies, 2, Cone(MosekTools.Optimizer()))
 ```
 Where the last one requires a Mosek license.
 
@@ -99,6 +99,8 @@ maximise_entropy(probability_distribution, marginal_size)
 ```
 Running the code with the optional parameter `method`:
 ```julia
+using SCS
+
 maximise_entropy(probability_distribution, marginal_size; method = Gradient(10, SCS.Optimizer()))
 ```
 
