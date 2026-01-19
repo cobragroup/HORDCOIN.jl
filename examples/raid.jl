@@ -2,7 +2,7 @@
 
 using EntropyMaximisation
 
-using MosekTools
+using SCS
 
 function to_bits(x, n)
 	Vector([(x ÷ (2^y)) % 2 for y in (n-1):-1:0])
@@ -15,6 +15,10 @@ function bitarr_to_int(arr)
 end;
 
 xor_vec(x::Vector) = xor.(x...);
+
+function normalise_and_sort_dict(dictionary)
+	return sort(collect(map(x -> (x[1] => round(x[2] ./ sum(values(dictionary)), digits = 3)), collect(dictionary))), by = x -> x[1])
+end
 
 # Computes EVENODD complement and returns it as an integer
 function compute_evenodd(nums::Vector{Int}, n)
@@ -75,32 +79,27 @@ normalised_1k = distribution_1k ./ sum(distribution_1k);
 
 
 # Calculation of connected information:
-# 1. fixing the marginal distribtutions
-connected_information(normalised_1m, [2, 3, 4, 5], method = Cone(MosekTools.Optimizer()))
 
-# 2. fixing the marginal entropies using polymatroid method
+# 1. fixing the marginal entropies using polymatroid method
 # a) using entropy estimate from empirical distribution
-method = RawPolymatroid(0.0, false, Mosek.Optimizer())
+method = RawPolymatroid(0.0, false, SCS.Optimizer())
 
-ci_raw_1m, ent_raw_1m = connected_information(distribution_1m, collect(2:5); method)
-ci_raw_1k, ent_raw_1k = connected_information(distribution_1k, collect(2:5); method)
+ci_raw_1m, ent_raw_1m = connected_information(distribution_1m, collect(2:5), method)
+ci_raw_1k, ent_raw_1k = connected_information(distribution_1k, collect(2:5), method)
 
 # b) using Grassberger estimator (takes approx 4 minutes)
-method = GPolymatroid(false, Mosek.Optimizer(), 0.01)
+method = GPolymatroid(false, SCS.Optimizer(), 0.01)
 
-ci_G_1m, ent_G_1m = connected_information(distribution_1m, collect(2:5); method)
-ci_G_1k, ent_G_1k = connected_information(distribution_1k, collect(2:5); method)
+ci_G_1m, ent_G_1m = connected_information(distribution_1m, collect(2:5), method)
+ci_G_1k, ent_G_1k = connected_information(distribution_1k, collect(2:5), method)
 
-function normalise_and_sort_dict(dictionary)
-	return sort(collect(map(x -> (x[1] => round(x[2] ./ sum(values(dictionary)), digits = 3)), collect(dictionary))), by = x -> x[1])
-end
 
-ci_G_1m
-ci_raw_1m
-ci_G_1k
-ci_raw_1k
+println("ci_G_1m", normalise_and_sort_dict(ci_G_1m));
+println("ci_raw_1m", normalise_and_sort_dict(ci_raw_1m));
+println("ci_G_1k", normalise_and_sort_dict(ci_G_1k));
+println("ci_raw_1k", normalise_and_sort_dict(ci_raw_1k));
 
-normalise_and_sort_dict(ci_G_1m)
-normalise_and_sort_dict(ci_raw_1m)
-normalise_and_sort_dict(ci_G_1k)
-normalise_and_sort_dict(ci_raw_1k)
+# 2. fixing the marginal distribtutions
+# This last part may take hours
+ci_fm_1m, ent_fm_1m = connected_information(normalised_1m, collect(2:5), Cone(SCS.Optimizer()))
+println("Fixed marginal: ", normalise_and_sort_dict(ci_fm_1m));
