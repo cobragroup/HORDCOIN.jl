@@ -1,9 +1,11 @@
-Pkg.activate("examples/")
 using Pkg
+Pkg.activate("examples/")
 using Revise
 using EntropyMaximisation
 using Random
 
+## Colours
+## Running time (48 cores): ~3:15 minutes
 
 rgb = rand(0:7, (1_000_000, 3))
 
@@ -30,11 +32,10 @@ end
 
 distribution = distribution ./ sum(distribution);
 
-maximise_entropy(distribution, 1, method = Cone(MosekOptimizer()))[1]
-maximise_entropy(distribution, 2, method = Cone(MosekOptimizer()))[1]
-maximise_entropy(distribution, 3, method = Cone(MosekOptimizer()))[1]
-maximise_entropy(distribution, 4, method = Cone(MosekOptimizer()))[1]
-
+for i in 1:4
+    println("marginal size ", i)
+    println("Entropy cmyk:", maximise_entropy(distribution, i, method = Cone()).entropy)
+end
 
 rgb_dist = zeros(8, 8, 8);
 
@@ -46,6 +47,7 @@ end
 
 rgb_dist = rgb_dist ./ sum(rgb_dist);
 
-maximise_entropy(rgb_dist, 1, method = Cone(MosekOptimizer()))[1]
-maximise_entropy(rgb_dist, 2, method = Cone(MosekOptimizer()))[1]
-maximise_entropy(rgb_dist, 3, method = Cone(MosekOptimizer()))[1]
+for i in 1:3
+    println("marginal size ", i)
+    println("Entropy rgb:", maximise_entropy(rgb_dist, i, method = Cone()).entropy)
+end

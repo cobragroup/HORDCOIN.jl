@@ -1,7 +1,8 @@
 # analyticalSolution.jl: Example for comparing analytical solution and EntropyMaximisation package
 
 using EntropyMaximisation
-
+import Pkg
+Pkg.add("JuMP")
 using JuMP.Containers: @container
 using MosekTools, SCS
 
@@ -38,12 +39,19 @@ p13 = dropdims(sum(p.data, dims = 2), dims = 2)
 
 
 maxim = sum(distribution_entropy.([p1, p2, p3])) - mutual_information(p23) - mutual_information(p13)
+println("Analytical: ", maxim)
 
+try
+    println("Mosek: ", maximise_entropy(p.data, 2, method = Cone(MosekTools.Optimizer())).entropy)
+catch e
+    if isa(e, Mosek.MosekError)
+        println("Missing Mosek license.")
+    else
+        throw(e)
+    end
+end
+println("Ipfp: ", maximise_entropy(p.data, 2, method = Ipfp(10)).entropy)
 
-maximise_entropy(p.data, 2, method = Cone(MosekTools.Optimizer()))
+println("Gradient: ", maximise_entropy(p.data, 2, method = Gradient(10)).entropy)
 
-maximise_entropy(p.data, 2, method = Ipfp(10))
-
-maximise_entropy(p.data, 2, method = Gradient(10))
-
-maximise_entropy(p.data, 2, method = Cone(SCS.Optimizer()))
+println("SCS: ", maximise_entropy(p.data, 2, method = Cone(SCS.Optimizer())).entropy)
