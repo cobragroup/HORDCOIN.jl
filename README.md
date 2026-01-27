@@ -4,7 +4,7 @@
 
 HORDCOIN provides methods for finding probability distributions with maximal Shannon entropy given a fixed marginal distribution or entropy up to a chosen order, and to compute the Connected Information. The package allows the selection of different optimisers.
 
-This project was created as a part of the bachelor's thesis "Connected Information from Given Entropies" at the Faculty of Electrical Engineering, Czech Technical University in Prague, and of the paper "COIN: Connected Information Approximation Using Entropic Constraints". See the section [How to cite](#how-to-cite) to cite it appropriately.
+This project was created as a part of the bachelor's thesis "Connected Information from Given Entropies" at the Faculty of Electrical Engineering, Czech Technical University in Prague, and of the paper "HORDCOIN: A Software Library for Higher Order Connected Information and Entropic Constraints Approximation". See the section [How to cite](#how-to-cite) to cite it appropriately.
 
 To maximise the entropy with marginal constraints, the package implements the following methods:
 - Exponential Cone Programming (with different solvers)
@@ -128,4 +128,4 @@ When computing with fixed entropies and a small number of samples, the recommend
 
 If you use this code for a scientific publication, please cite:
 
-> Tani Raffaelli G., Kislinger J., Kroupa T., and Hlinka J., "COIN: Connected Information Approximation Using Entropic Constraints"
+> Tani Raffaelli G., Kislinger J., Kroupa T., and Hlinka J., "HORDCOIN: A Software Library for Higher Order Connected Information and Entropic Constraints Approximation"
