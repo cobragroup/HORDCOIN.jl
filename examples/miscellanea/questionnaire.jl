@@ -1,7 +1,7 @@
 # questionnaire.jl: Benchmark and comparison of different methods on a real dataset
 # Computation of connected information of a questionnaire
 
-using EntropyMaximisation
+using HORDCOIN
 
 using CSV, DataFrames, BenchmarkTools, SCS
 

@@ -1,9 +1,9 @@
-# marginalsVsEntropy.jl: Example for comparing fixing marginal distributions and fixing marginal entropies
+# marginalsVsEntropy_3Dcomparison.jl: Example for comparing fixing marginal distributions and fixing marginal entropies
 
-using EntropyMaximisation
+using HORDCOIN
 using JuMP.Containers: @container
 
-p2 = @container([x1 = [0, 1, 2, 3], x2 = [0, 1, 2, 3], x3 =[0, 1, 2, 3]], .0)
+p2 = @container([x1 = [0, 1, 2, 3], x2 = [0, 1, 2, 3], x3 = [0, 1, 2, 3]], 0.0)
 p2[0, 0, 0] = 0.02
 p2[0, 0, 1] = 0.018
 p2[0, 0, 2] = 0.01
@@ -76,10 +76,10 @@ p2[3, 3, 3] = 0
 # almost the same result as maximising entropy when fixing marginal distributions
 
 for j in 1:3
-    println("marginal size ", j)
-    @show distribution_entropy(p2.data)
-    println("Marginal distribution")
-    @show distribution_entropy(maximise_entropy(p2.data, j, method = Cone()).joined_probability)
-    println("Fixed entropies")
-    @show max_ent_fixed_ent(p2.data, j, RawPolymatroid())
+	println("marginal size ", j)
+	@show distribution_entropy(p2.data)
+	println("Marginal distribution")
+	@show distribution_entropy(maximise_entropy(p2.data, j, method = Cone()).joined_probability)
+	println("Fixed entropies")
+	@show max_ent_fixed_ent(p2.data, j, RawPolymatroid())
 end

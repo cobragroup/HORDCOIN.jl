@@ -1,4 +1,6 @@
-using EntropyMaximisation
+# example_Texts.jl: example with texts from the associated paper
+
+using HORDCOIN
 using SCS
 
 # If your file does not use ASCII encoding (or UTF-8 limited to the ASCII subset),
@@ -11,9 +13,9 @@ N_CHAR = 7
 NG = 6
 
 function char_to_number(c)
-	n=Int(c)-Int('a')
+	n = Int(c) - Int('a')
 	if 0 <= n <= 5
-		return n+1
+		return n + 1
 	else
 		return 7
 	end
@@ -26,7 +28,7 @@ end
 function Ncounter(sequence, N)
 	tmp = []
 	for i in 1:N
-		tot = N*div(length(sequence)-i+1, N)
+		tot = N * div(length(sequence) - i + 1, N)
 		push!(tmp, reshape(sequence[i:((tot+i)-1)], (div(tot, N), N)))
 	end
 	a = vcat(tmp...)

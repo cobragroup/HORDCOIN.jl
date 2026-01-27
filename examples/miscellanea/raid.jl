@@ -1,6 +1,6 @@
 # raid.jl: RAID 6 examples
 
-using EntropyMaximisation
+using HORDCOIN
 
 using SCS
 

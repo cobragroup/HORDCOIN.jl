@@ -1,10 +1,10 @@
-# example.jl:
+# simpleMosekExample.jl:
 
-using EntropyMaximisation
+using HORDCOIN
 using MosekTools
 using JuMP.Containers: @container
 
-p2 = @container([x1 = [0, 1, 2, 3], x2 = [0, 1, 2, 3], x3 =[0, 1, 2, 3]], .0)
+p2 = @container([x1 = [0, 1, 2, 3], x2 = [0, 1, 2, 3], x3 = [0, 1, 2, 3]], 0.0)
 p2[0, 0, 0] = 0.02
 p2[0, 0, 1] = 0.018
 p2[0, 0, 2] = 0.01
@@ -78,22 +78,22 @@ println("Distribution normalisation: ", sum(p2.data))
 println("Entropy: ", distribution_entropy(p2.data))
 
 try
-    res = maximise_entropy(p2.data, 2; method = Cone(MosekTools.Optimizer()))
-    res1 = maximise_entropy(p2.data, 2; method = Gradient(10, MosekTools.Optimizer()))
-    res2 = maximise_entropy(p2.data, 2; method = Ipfp(10))
-    diff1 = abs.(res.joined_probability - res1.joined_probability);
-    diff2 = abs.(res.joined_probability - res2.joined_probability);
-    diff3 = abs.(res1.joined_probability - res2.joined_probability);
-    println("Difference Cone-Gradient", sum(diff1))
-    println("Difference Cone-Ipfp", sum(diff2))
-    println("Difference Gradient-Ipfp",sum(diff3))
+	res = maximise_entropy(p2.data, 2; method = Cone(MosekTools.Optimizer()))
+	res1 = maximise_entropy(p2.data, 2; method = Gradient(10, MosekTools.Optimizer()))
+	res2 = maximise_entropy(p2.data, 2; method = Ipfp(10))
+	diff1 = abs.(res.joined_probability - res1.joined_probability)
+	diff2 = abs.(res.joined_probability - res2.joined_probability)
+	diff3 = abs.(res1.joined_probability - res2.joined_probability)
+	println("Difference Cone-Gradient", sum(diff1))
+	println("Difference Cone-Ipfp", sum(diff2))
+	println("Difference Gradient-Ipfp", sum(diff3))
 catch e
-    if isa(e, Mosek.MosekError)
-        println("Missing Mosek license.")
-    else
-        throw(e)
-    end
+	if isa(e, Mosek.MosekError)
+		println("Missing Mosek license.")
+	else
+		throw(e)
+	end
 end
 
 
-println("Connected information: ",connected_information(p2.data, 2))
+println("Connected information: ", connected_information(p2.data, 2))

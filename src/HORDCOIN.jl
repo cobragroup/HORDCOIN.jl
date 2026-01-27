@@ -1,6 +1,6 @@
-# EntropyMaximisation.jl:
+# HORDCOIN.jl:
 
-module EntropyMaximisation
+module HORDCOIN
 
 using ProgressMeter
 
