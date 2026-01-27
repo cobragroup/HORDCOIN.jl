@@ -1,4 +1,4 @@
-# example.jl:
+# simpleMosekExample.jl:
 
 using HORDCOIN
 using MosekTools
