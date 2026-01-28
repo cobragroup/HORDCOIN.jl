@@ -1,6 +1,6 @@
 # HORDCOIN.jl
 
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/cobragroup/EntropyMaximisation/blob/develop/LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/cobragroup/HORDCOIN/blob/main/LICENSE)
 
 HORDCOIN provides methods for finding probability distributions with maximal Shannon entropy given a fixed marginal distribution or entropy up to a chosen order, and to compute the Connected Information. The package allows the selection of different optimisers.
 
@@ -18,7 +18,7 @@ Moreover, in case of undersampled distributions, it is possible to use a built-i
 ## Installation
 The package is not registered, but can be installed in the following way:
 ```julia
-pkg> add https://github.com/cobragroup/EntropyMaximisation.git#develop
+pkg> add https://github.com/cobragroup/HORDCOIN.git#develop
 ```
 
 ## Usage

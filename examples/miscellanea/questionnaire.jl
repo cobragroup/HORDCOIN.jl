@@ -6,8 +6,8 @@ using HORDCOIN
 using CSV, DataFrames, BenchmarkTools, SCS
 
 # Data from https://archive.ics.uci.edu/dataset/262/turkiye+student+evaluation has to be downloaded and placed in 
-# the folder EntropyMaximisation/resources
-df = CSV.read(pwd() * "/EntropyMaximisation/resources/turkiye-student-evaluation_generic.csv", header = true, DataFrame)
+# the folder HORDCOIN/resources
+df = CSV.read(pwd() * "/HORDCOIN/resources/turkiye-student-evaluation_generic.csv", header = true, DataFrame)
 
 # Benchmark of different methods using empirical distribution for estimating entropy
 for j in 4:10
