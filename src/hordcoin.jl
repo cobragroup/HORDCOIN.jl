@@ -1,6 +1,6 @@
-# HORDCOIN.jl:
+# hordcoin.jl:
 
-module HORDCOIN
+module hordcoin
 
 using ProgressMeter
 
@@ -37,8 +37,6 @@ include("utils.jl")
 include("Gcorr.jl")
 include("ipfp.jl")
 include("exponentialCone.jl")
-# Commented due to unavailable data
-#include("matlabParser.jl")
 include("projectedGradient.jl")
 include("polymatroid.jl")
 
